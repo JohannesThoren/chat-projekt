@@ -10,8 +10,7 @@ HEIGHT = 500
 # create a client object
 client = client.Client()
 
-def open_chat(client, receiver):
-    text, entry, lbl, win = chat_win.chat_win(client, receiver)
+
 
 
 # creating a tk instance
@@ -40,7 +39,7 @@ disconnect_btn = tk.Button(
 disconnect_btn.place(relwidth=0.5, relx=0.5, rely=0, relheight=0.05)
 
 # open chat window button
-open_chat_btn = tk.Button(list_frame, text="open chat", command=lambda: open_chat(client, conn_list.get(tk.ACTIVE)))
+open_chat_btn = tk.Button(list_frame, text="open chat", command=lambda: chat_win.chat_win(client, conn_list.get()))
 open_chat_btn.place(relwidth=1, relx=0, rely=0.95, relheight=0.05)
 
 root.config(width=WIDTH, height=HEIGHT)

@@ -3,6 +3,10 @@ import tkinter as tk
 import threading
 import process_data
 
+class Chat:
+    def __init__(self, chat_text, nick):
+        self.chat_text = chat_text
+        self.nick = nick
 
 class Client:
     def __init__(self):
@@ -11,6 +15,7 @@ class Client:
         self.nick = None
         self.root = None
         self.conn_list = None
+        self.chat = []
 
     def init_client(self, host, port, nick, root, conn_list):
         self.host = host
@@ -18,7 +23,6 @@ class Client:
         self.nick = nick
         self.root = root
         self.conn_list = conn_list
-      
 
         self.start_client()
 
@@ -27,6 +31,8 @@ class Client:
             self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            self.conn_list.delete(0,tk.END)
 
             self.root.title("Chat")
         except:
@@ -58,4 +64,5 @@ class Client:
                 break
 
     def send_func(self, data, receiver):
-        data_process = process_data.ProcessData()
+        data = process_data.process_to_send("msg",self.nick, receiver, data)
+        self.sock.send(data)

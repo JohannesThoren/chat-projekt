@@ -3,7 +3,7 @@ import threading
 from time import sleep
 
 
-PORT = 3000
+PORT = 3001
 HOST = "0.0.0.0"
 
 
@@ -23,8 +23,8 @@ class Client:
 # help for later
 # data will be received like this "type|from|receiver|data"
 
-# from      :   either the sender or the server
 # types     :   command, msg, etc
+# from      :   either the sender or the server
 # receiver  :   either the server or another connected client,
 # data      :   either the msg or the command
 
@@ -81,7 +81,7 @@ class Server():
     def send_list(self, conn):
         for client in self.clients:
             conn.send(f"ulist|add|{client.nick}".encode("UTF-8"))
-            sleep(0.5)
+            sleep(0.05)
     #update the conn_list for each client
     def update_lists(self, nick, method):
         for client in self.clients:
@@ -101,6 +101,8 @@ class Server():
             try:
                 client.conn.send(b"!ping")
                 data = client.conn.recv(512)
+
+                
             except:
                 client.conn.close()
                 self.clients.remove(client)
@@ -111,7 +113,8 @@ class Server():
             
             
             if data != b"!ping":
-                print(data)
+                
+
             else:
                 continue
 
