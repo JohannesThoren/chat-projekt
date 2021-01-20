@@ -1,14 +1,13 @@
 import socket
 import threading
+from time import sleep
 
-PORT = 3001
+
+PORT = 3000
 HOST = "0.0.0.0"
-CONNECTIONS = 10
-
-# the class that will take care of the
-# clients.
 
 
+# the class that will take care of the clients and make stuff easier for me
 class Client:
 
     def __init__(self, conn, addr):
@@ -16,26 +15,24 @@ class Client:
         self.addr = addr
         self.nick = None
 
-    # send data to this client
-    def send(self):
-        return
-
     # just a thing to set the nick name
     def set_nick(self, nick):
         self.nick = nick
 
 
 # help for later
-# data will be received like this "type|receiver|data"
+# data will be received like this "type|from|receiver|data"
 
+# from      :   either the sender or the server
 # types     :   command, msg, etc
 # receiver  :   either the server or another connected client,
 # data      :   either the msg or the command
 
+
+# TODO force the user to set a nickname in some way
 class Server():
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         self.clients = []
 
     # sets all variables that is needed for the sockets
@@ -44,23 +41,31 @@ class Server():
 
         while True:
             try:
+                print(f"now listening for connections on port {PORT}!")
 
                 # listen for connections and connect them if the server is not full
-                self.sock.listen(CONNECTIONS)
+                self.sock.listen()
                 conn, addr = self.sock.accept()
-
-                print(f"{addr} just connected to the server")
+                print("------------------")
+                print(f"[{addr}]\tjust connected to the server!")
                 client = Client(conn, addr)
+                
+                # set the clients nick name
+                # this will be auto sent from the client when the try to connect
+                nick = client.conn.recv(512).decode()
+                client.set_nick(nick)
+                print(f"[{client.addr}]\tnick name set to {client.nick}!")
+
+                self.update_lists(nick,"add")
+                self.send_list(conn)
 
                 # append the client to the clients list
-
                 self.clients.append(client)
-                print(f"client {addr} added to clients list")
-
-                conn.send(b"you are now connected to the server!\n")
+                print(f"[{client.addr}]\tclient added to clients list!")
 
                 # start a thread for receiving data from the clients
-                threading.Thread(target=self.recv_func(client))
+                recv_thread = threading.Thread(target=self.recv_func, args=(client,)).start()
+
 
             except:
                 # if error clos all connections and exit
@@ -73,35 +78,43 @@ class Server():
                 exit()
                 break
 
+    def send_list(self, conn):
+        for client in self.clients:
+            conn.send(f"ulist|add|{client.nick}".encode("UTF-8"))
+            sleep(0.5)
+    #update the conn_list for each client
+    def update_lists(self, nick, method):
+        for client in self.clients:
+            client.conn.send(f"ulist|{method}|{nick}".encode("UTF-8")) 
+
     # this is the function that will recv data from all connected clients.
     # this will be started in different threads.
     # 1 for each connected client.
     def recv_func(self, client):
-        print(f"recv thread started for client")
+        print(f"[{client.addr}]\trecv thread started for client!")
+        print("------------------\n")
 
         while True:
-            try:
-                data = client.conn.recv(512)
 
-                # check if data received is none
-                # if none then close the connection
-                # else do stuff
-                
-                if data != b'':
-                    self.process(f"{client.addr} : {data}")
-                    #do stuff here with the data
-                
-                else:
-                    client.conn.close()
+            # this is pings the client for each iteration and checks if it is still connected
+            # if not clos the connection and remove the client form the clients list
+            try:
+                client.conn.send(b"!ping")
+                data = client.conn.recv(512)
             except:
-                print("connection to client closed!")
                 client.conn.close()
+                self.clients.remove(client)
+                self.update_lists(client.nick, "del")
+                print(f"[{client.addr}]\tclient disconnected from the server!")
                 break
 
-    # this will process the data received and parse it according to the above text
-    def process(self, data):
-        print(data)
-        return
+            
+            
+            if data != b"!ping":
+                print(data)
+            else:
+                continue
+
 
 
 serv = Server()
