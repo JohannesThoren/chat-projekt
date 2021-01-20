@@ -1,7 +1,7 @@
 import socket
 import threading
 
-PORT = 3300
+PORT = 3001
 HOST = "0.0.0.0"
 CONNECTIONS = 10
 
@@ -60,30 +60,43 @@ class Server():
                 conn.send(b"you are now connected to the server!\n")
 
                 # start a thread for receiving data from the clients
-                threading.Thread(target=self.recv_func(conn))
-                
+                threading.Thread(target=self.recv_func(client))
 
             except:
+                # if error clos all connections and exit
                 for client in self.clients:
-                     client.conn.close()
+                    client.conn.close()
 
                 self.sock.close()
                 print("an error occurred!")
+
+                exit()
                 break
-                
-        # if loop stops then close the server socket
-        self.sock.close()
 
     # this is the function that will recv data from all connected clients.
     # this will be started in different threads.
     # 1 for each connected client.
-    def recv_func(self, conn):
+    def recv_func(self, client):
         print(f"recv thread started for client")
 
-        while True: 
-            data = conn.recv()
-            self.process(data)
+        while True:
+            try:
+                data = client.conn.recv(512)
 
+                # check if data received is none
+                # if none then close the connection
+                # else do stuff
+                
+                if data != b'':
+                    self.process(f"{client.addr} : {data}")
+                    #do stuff here with the data
+                
+                else:
+                    client.conn.close()
+            except:
+                print("connection to client closed!")
+                client.conn.close()
+                break
 
     # this will process the data received and parse it according to the above text
     def process(self, data):
