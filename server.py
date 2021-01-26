@@ -2,10 +2,14 @@ import socket
 import threading
 from time import sleep
 import protocol
-PORT = 3001
+import datetime
+
+PORT = 3000
 HOST = "0.0.0.0"
 
 # the class that will take care of the clients and make stuff easier for me
+
+
 class Client:
 
     def __init__(self, conn, addr):
@@ -40,8 +44,10 @@ class Server():
 
                 # set the clients nick name
                 # this will be auto sent from the client when it tries to connect
-                nick = client.conn.recv(512).decode()
+                nick = client.conn.recv(512).decode().rstrip()
+
                 client.set_nick(nick)
+                
                 print(f"[{client.addr}]\tnick name set to {client.nick}!")
 
                 # append the client to the clients list
@@ -51,6 +57,8 @@ class Server():
                 # start a thread for receiving data from the clients
                 recv_thread = threading.Thread(
                     target=self.recv_func, args=(client,)).start()
+
+                conn.send(b"you are now connected to the server!")
 
             except:
                 # if error clos all connections and exit
@@ -70,37 +78,42 @@ class Server():
     def recv_func(self, client):
         print(f"[{client.addr}]\trecv thread started for client!")
 
-
         while True:
 
             try:
-                # this pings the client for each iteration and checks if it is still connected
+                # this pings the client for each iteration of and checks if it is still connected
                 client.conn.send(b"!ping")
                 data = client.conn.recv(512)
 
             except:
-                # id client is disconnected then close connection and remove client from the list
+                # if client is disconnected then close connection and remove client from the list
                 client.conn.close()
                 self.clients.remove(client)
                 print(f"[{client.addr}]\tclient disconnected from the server!")
+
+
+
                 break
 
             if data != b"!ping" and data != b"":
                 try:
-                    parsed = protocol.Protocol(data)
-                    print(parsed.type)
+                    now = datetime.datetime.now()
+                    now = now.strftime("%H:%M:%S")
+
+                    # parsing the data and doing the correct thing according to the type
+                    recv_data = protocol.Protocol(data)
+            
+                    if recv_data.type == "msg":
+                        for receiving_client in self.clients:
+                            receiving_client.conn.send(f"[{now}] [{client.nick}] : {recv_data.msg}".encode())
+
                 except:
                     print("something went wrong trying to parse the data!")
 
-
-                if parsed.type == "msg":
-                    for client_recv in self.clients:
-                        print(client_recv.nick)
-                        if client_recv.nick == parsed.receiver:
-                            print("yeee")
-     
+                
             else:
                 continue
+
 
 serv = Server()
 serv.init()
