@@ -101,11 +101,14 @@ class Server():
                     now = now.strftime("%H:%M:%S")
 
                     # parsing the data and doing the correct thing according to the type
-                    recv_data = protocol.Protocol(data)
+                    recv_data = protocol.Protocol.parse(data)
             
                     if recv_data.type == "msg":
-                        for receiving_client in self.clients:
-                            receiving_client.conn.send(f"[{now}] [{client.nick}] : {recv_data.msg}".encode())
+                        if recv_data.receiver == "all":
+                            for receiving_client in self.clients:
+                                receiving_client.conn.send(f"[{now}] [{client.nick}] : {recv_data.msg}".encode())
+                        else:
+                            print(recv_data.receiver)
 
                 except:
                     print("something went wrong trying to parse the data!")
