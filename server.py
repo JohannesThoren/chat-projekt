@@ -96,24 +96,25 @@ class Server():
                 break
 
             if data != b"!ping" and data != b"":
-                try:
-                    now = datetime.datetime.now()
-                    now = now.strftime("%H:%M:%S")
+                    
+                received = protocol.Protocol(data)
+                received.parse()
 
-                    # parsing the data and doing the correct thing according to the type
-                    recv_data = protocol.Protocol.parse(data)
-            
-                    if recv_data.type == "msg":
-                        if recv_data.receiver == "all":
-                            for receiving_client in self.clients:
-                                receiving_client.conn.send(f"[{now}] [{client.nick}] : {recv_data.msg}".encode())
-                        else:
-                            print(recv_data.receiver)
+        
+                now = datetime.datetime.now()
+                now = now.strftime("%H:%M:%S")
 
-                except:
-                    print("something went wrong trying to parse the data!")
+                if received.type == "msg":
+                    if received.receiver == "all":
+                        for receiving_client in self.clients:
+                                receiving_client.conn.send(f"[{now}] [{client.nick}] : {received.msg}".encode())
+                    else:
+                        print(recv_data.receiver)
 
-                
+
+
+
+
             else:
                 continue
 

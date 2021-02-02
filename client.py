@@ -3,13 +3,16 @@ import threading
 import protocol as prot
 from dearpygui import core, simple
 
-class Client: 
+
+class Client:
     def __init__(self):
         self.sock = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
-
-    def connect(self, address, port, nick): 
-        try:
+        self.buffer = []
+    def connect(self, address, port, nick):
+        try:   
             self.sock.connect((address, int(port)))
+            
+            # send the nickname to the server
             self.sock.send(nick.encode())
         except:
             print("oops")
@@ -25,7 +28,8 @@ class Client:
         while True:
             data = self.sock.recv(512)
             if data != b"!ping":
-                print("poof")
+                recv = data.decode()
+                core.configure_item("##chat_box", items=self.buffer)
             else:
                 continue
 
@@ -34,32 +38,57 @@ class Client:
         msg = protocol.build_msg("msg", receiver, msg)
         self.sock.send(msg.encode())
 
+server_names = []
+servers = []
+
+def get_servers_from_file():
+    lines = open("servers.txt", "r+").readlines()
+    
+    for line in lines:
+        tmp = line.split(",")
+        server_names.append(tmp[0])
+        servers.append(tmp)
+
+
+
+
+get_servers_from_file()
+
+# TODO make size of widgets dynamic!!
 
 # dear imgui stuff
+core.set_main_window_size(800, 776)
 
-core.set_main_window_size(1015, 800)
-core.set_global_font_scale(1,5)
+with simple.window("add_server", height=200, width=200, show=False):
+    core.add_input_text("ip", width=120)
+    core.add_input_text("port", width=120)
+    core.add_input_text("nickname", width=120)
 
-with simple.window("chat", width=700, height=800):
-    print("chat window initialized")
-    simple.set_window_pos("chat", 0, 0)
+with simple.window("win", width=700, height=800):
+    # serverlist widgets 
+    core.add_combo("##server_list", width=280, items=server_names)
+    core.add_same_line()
+    core.add_button("add server", width=102)
+    core.add_same_line()
+    core.add_button("delete server", width=102)
 
+    #connection widgets
+    core.add_button("connect", width=246)
+    core.add_same_line()
+    core.add_button("disconnect", width=246)
+    core.add_separator()
 
-with simple.window("connection", width=300, height=300):
-    print("connection window initialized")
-    simple.set_window_pos("connection", 700, 0)
-    core.add_input_text("ip")
-    core.add_input_text("port")
-    core.add_input_text("nick")
-
-    core.add_button("connect")
-
-with simple.window("list", width=300, height=500):
-    print("list window initialized")
-    simple.set_window_pos("list", 700, 300)
-
-core.start_dearpygui()
+    # chat widgets
+    core.add_listbox("##chat_box", width=500, num_items=40)
+    core.add_same_line()
+    core.add_listbox("##connected", width=276, num_items=40)
+    core.add_input_text("##chat_input", width=442)
+    core.add_same_line()
+    core.add_button("send", width=50)
 
 client = Client()
-client.connect("localhost", "3000", "johannes")
+client.connect("localhost", "3000", "hej")
+
+core.set_primary_window("win", True)
+core.start_dearpygui()
 
