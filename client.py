@@ -5,33 +5,52 @@ from dearpygui import core, simple
 import tkinter as tk
 
 class Client:
-    def __init__(self):
-        self.sock = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
-        self.buffer = []
+    def __init__(self, app):
+
+        # creating the socket and tell it to use ipv4
+        self.sock = None
+        self.app = app
+
     def connect(self, address, port, nick):
-        try:   
-            self.sock.connect((address, int(port)))
+        # try to connect to the server
+            print(f"trying to connect to server{address}:{port} as {nick}")
+            self.sock = sock.socket(sock.AF_INET, sock.SOCK_STREAM)
+            try:   
+                self.sock.connect((address, int(port)))
+                
+                # send the nickname to the server
+                self.sock.send(nick.encode())
+            except:
+                print("oops")
             
-            # send the nickname to the server
-            self.sock.send(nick.encode())
-        except:
-            print("oops")
+            # start the receiverer thread
+            recv_t = threading.Thread(target=self.recv)
+            recv_t.start()
 
-        recv_t = threading.Thread(target=self.recv)
-        recv_t.start()
-
+    # disconnect from server and clean up some stuff
     def disconnect(self):
+        self.sock.shutdown(2)
         self.sock.close()
+
         return
+
 
     def recv(self):
         while True:
-            data = self.sock.recv(512)
-            if data != b"!ping":
-                recv = data.decode()
-                print(recv)
-            else:
-                continue
+            # receive data add run it through the protocol parser
+            try:
+                data = self.sock.recv(512)
+                if data != b"!ping" and data != b"":
+
+                    
+                    recv = data.decode()
+                    self.app.chat_box.insert(tk.END,recv+"\n")
+
+
+                else:
+                    continue
+            except:
+                break
 
     def send(self, receiver, msg):
         protocol = prot.Protocol()
@@ -65,8 +84,40 @@ class app(tk.Frame):
         self.connection_canvas.place(relx=0.7, relwidt=0.3, relheight=0.2)
         self.list_canvas.place(relx=0.7, rely=0.2, relwidt=0.3, relheight=0.8)
 
+        # server connect menu
+        self.ip_entry = tk.Entry(self.connection_canvas, text="server ip address")
+        self.port_entry = tk.Entry(self.connection_canvas, text="server port")
+        self.nick_entry = tk.Entry(self.connection_canvas, text="nickname")
+        self.connect_btn = tk.Button(self.connection_canvas, text="Connect")
+        self.disconnect_btn = tk.Button(self.connection_canvas, text="disconnect")
+        self.status_lbl = tk.Label(self.connection_canvas, text="not connected!")
 
+        self.ip_entry.pack(fill=tk.X)
+        self.port_entry.pack(fill=tk.X)
+        self.nick_entry.pack(fill=tk.X)
+        self.connect_btn.pack(fill=tk.X)
+        self.disconnect_btn.pack(fill=tk.X)
+        self.status_lbl.pack(fill=tk.BOTH, expand=1)
+
+        # connected users
+        self.user_list = tk.Listbox(self.list_canvas)
+        self.user_list.pack(fill=tk.BOTH, expand=1)
+
+        #chat area
+        self.chat_box = tk.Text(self.chat_canvas)
+        self.chat_input = tk.Entry(self.chat_canvas)
+        self.send_btn = tk.Button(self.chat_canvas, text="send")
+
+        self.chat_box.pack(fill=tk.BOTH, expand=1)
+        self.chat_input.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        self.send_btn.pack(side=tk.RIGHT)
 
 root = tk.Tk()
-app(root).pack(side="top", fill="both", expand=True)
+app = app(root)
+c = Client(app)
+
+
+app.connect_btn.config(command=lambda: c.connect(app.ip_entry.get(), app.port_entry.get(), app.nick_entry.get()))
+app.disconnect_btn.config(command=c.disconnect)
+
 root.mainloop()

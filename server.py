@@ -55,11 +55,21 @@ class Server():
                 self.clients.append(client)
                 print(f"[{client.addr}]\tclient added to clients list!")
 
+                # update connected list
+                name_list = "usrList|"
+
+                for client in self.clients:
+                    name_list = name_list+"|"+client.nick
+                
+                print (name_list)
+
                 # start a thread for receiving data from the clients
                 recv_thread = threading.Thread(
                     target=self.recv_func, args=(client,)).start()
 
                 conn.send(b"you are now connected to the server!")
+
+       
 
             except:
                 # if error clos all connections and exit
