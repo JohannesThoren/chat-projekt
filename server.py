@@ -4,6 +4,7 @@ from time import sleep
 import protocol
 import datetime
 
+
 PORT = 3000
 HOST = "0.0.0.0"
 
@@ -111,13 +112,11 @@ class Server():
                     else:
                         print(recv_data.receiver)
 
-
-
-
-
             else:
                 continue
 
 
 serv = Server()
 serv.init()
+
+

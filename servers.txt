@@ -1,1 +1,2 @@
 servernamn,ip,port
+test,localhost

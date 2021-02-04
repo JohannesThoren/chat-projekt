@@ -2,7 +2,7 @@ import socket as sock
 import threading
 import protocol as prot
 from dearpygui import core, simple
-
+import tkinter as tk
 
 class Client:
     def __init__(self):
@@ -29,7 +29,7 @@ class Client:
             data = self.sock.recv(512)
             if data != b"!ping":
                 recv = data.decode()
-                core.configure_item("##chat_box", items=self.buffer)
+                print(recv)
             else:
                 continue
 
@@ -49,46 +49,24 @@ def get_servers_from_file():
         server_names.append(tmp[0])
         servers.append(tmp)
 
+# the main window
+class app(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.parent.geometry("600x800")
+
+        # some canvases for structure
+        self.chat_canvas = tk.Canvas(self.parent, bg="#ff0000")
+        self.connection_canvas = tk.Canvas(self.parent, bg="#00ff00")
+        self.list_canvas = tk.Canvas(self.parent, bg="#0000ff")
+
+        self.chat_canvas.place(relwidt=0.7, relheight=1)
+        self.connection_canvas.place(relx=0.7, relwidt=0.3, relheight=0.2)
+        self.list_canvas.place(relx=0.7, rely=0.2, relwidt=0.3, relheight=0.8)
 
 
 
-get_servers_from_file()
-
-# TODO make size of widgets dynamic!!
-
-# dear imgui stuff
-core.set_main_window_size(800, 776)
-
-with simple.window("add_server", height=200, width=200, show=False):
-    core.add_input_text("ip", width=120)
-    core.add_input_text("port", width=120)
-    core.add_input_text("nickname", width=120)
-
-with simple.window("win", width=700, height=800):
-    # serverlist widgets 
-    core.add_combo("##server_list", width=280, items=server_names)
-    core.add_same_line()
-    core.add_button("add server", width=102)
-    core.add_same_line()
-    core.add_button("delete server", width=102)
-
-    #connection widgets
-    core.add_button("connect", width=246)
-    core.add_same_line()
-    core.add_button("disconnect", width=246)
-    core.add_separator()
-
-    # chat widgets
-    core.add_listbox("##chat_box", width=500, num_items=40)
-    core.add_same_line()
-    core.add_listbox("##connected", width=276, num_items=40)
-    core.add_input_text("##chat_input", width=442)
-    core.add_same_line()
-    core.add_button("send", width=50)
-
-client = Client()
-client.connect("localhost", "3000", "hej")
-
-core.set_primary_window("win", True)
-core.start_dearpygui()
-
+root = tk.Tk()
+app(root).pack(side="top", fill="both", expand=True)
+root.mainloop()
