@@ -1,7 +1,6 @@
 import socket as sock
 import threading
 import protocol as prot
-from dearpygui import core, simple
 import tkinter as tk
 
 
