@@ -18,8 +18,8 @@ class Protocol():
         self.receiver = self.data[1].rstrip()
         self.msg = self.data[2].rstrip()
 
-        print(f"{self.data}\t{self.type}\t{self.receiver}\t{self.msg}")
+        print(f"{self.data}")
 
 
-    def build_msg(self, msg_type, receiver, data):
+    def build_msg(self, msg_type, receiver):
         return f"{msg_type}|{receiver}|{self.data}"
