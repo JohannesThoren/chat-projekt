@@ -41,8 +41,8 @@ class Client:
             try:
                 data = self.sock.recv(512)
                 if data != b"!ping" and data != b"":
-                    p = prot.Protocol(data)
-                    p.parse()
+                    p = prot.Protocol()
+                    p.parse(data)
                     if p.type == "usrList":
                         usrList = p.msg.split(",")
                         self.app.user_list.delete(0, tk.END)
@@ -56,8 +56,8 @@ class Client:
                 break
 
     def send(self, receiver, msg):
-        protocol = prot.Protocol(msg)
-        msg = protocol.build_msg("msg", receiver)
+        protocol = prot.Protocol()
+        msg = protocol.build_msg_s(msg, "msg", receiver)
         self.sock.send(msg.encode())
 
 
@@ -145,18 +145,18 @@ def disconnect(app, client):
     app.status_lbl.config(text="not connected")
 
 
-
 root = tk.Tk()
 app = app(root)
 c = Client(app)
 
 
 def send(*args):
-    try:
-        c.send("all", app.chat_input.get())
-        app.chat_input.delete(0, tk.END)
-    except:
-        app.chat_box.insert(tk.END, "you must be connected to a server to be able to send anyting!")
+    # try:
+    c.send("all", app.chat_input.get())
+    app.chat_input.delete(0, tk.END)
+    # except:
+    # app.chat_box.insert(tk.END, "you must be connected to a server to be able to send anyting!")
+
 
 app.connect_btn.config(command=lambda: connect(app, c))
 app.disconnect_btn.config(command=lambda: disconnect(app, c))
