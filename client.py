@@ -1,3 +1,5 @@
+#!/bin/python3
+
 import socket as sock
 import threading
 import protocol as prot
@@ -80,7 +82,7 @@ class app(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.parent.geometry("600x800")
+        self.parent.geometry("900x900")
 
         # some canvases for structure
         self.chat_canvas = tk.Canvas(self.parent, bg="#ff0000")
@@ -91,27 +93,37 @@ class app(tk.Frame):
         self.connection_canvas.place(relx=0.7, relwidt=0.3, relheight=0.2)
         self.list_canvas.place(relx=0.7, rely=0.2, relwidt=0.3, relheight=0.8)
 
-        # server connect menu
-        self.ip_entry = tk.Entry(
-            self.connection_canvas, text="server ip address")
-        self.port_entry = tk.Entry(self.connection_canvas, text="server port")
-        self.nick_entry = tk.Entry(self.connection_canvas, text="nickname")
-        self.connect_btn = tk.Button(self.connection_canvas, text="Connect")
-        self.disconnect_btn = tk.Button(
-            self.connection_canvas, text="disconnect")
-        self.status_lbl = tk.Label(
-            self.connection_canvas, text="not connected!")
+        #small workaround
+        self.ip = tk.Canvas(self.connection_canvas)
+        self.port = tk.Canvas(self.connection_canvas)
+        self.nick = tk.Canvas(self.connection_canvas)
 
-        self.ip_entry.pack(fill=tk.X)
-        self.port_entry.pack(fill=tk.X)
-        self.nick_entry.pack(fill=tk.X)
+        self.ip.pack(fill=tk.X)
+        self.port.pack(fill=tk.X)
+        self.nick.pack(fill=tk.X)
+
+        # server connect menu
+        self.ip_entry = tk.Entry(self.ip, text="server ip address")
+        self.port_entry = tk.Entry(self.port, text="server port")
+        self.nick_entry = tk.Entry(self.nick, text="nickname")
+        self.ip_lbl = tk.Label(self.ip, text="Ip address")
+        self.port_lbl = tk.Label(self.port, text="server port")
+        self.nick_lbl = tk.Label(self.nick, text="nickname")
+
+        self.connect_btn = tk.Button(self.connection_canvas, text="Connect")
+        self.disconnect_btn = tk.Button(self.connection_canvas, text="disconnect")
+        self.status_lbl = tk.Label(self.connection_canvas, text="not connected!")
+
+        self.ip_lbl.pack(fill=tk.X, side="left")
+        self.port_lbl.pack(fill=tk.X, side="left")
+        self.nick_lbl.pack(fill=tk.X, side="left")
+
+        self.ip_entry.pack(side="right")
+        self.port_entry.pack(side="right")
+        self.nick_entry.pack(side="right")
         self.connect_btn.pack(fill=tk.X)
         self.disconnect_btn.pack(fill=tk.X)
         self.status_lbl.pack(fill=tk.BOTH, expand=1)
-
-        self.ip_entry.insert(0, "server ip address")
-        self.port_entry.insert(0, "server port")
-        self.nick_entry.insert(0, "Choose a nickname")
 
         # connected users
         self.user_list = tk.Listbox(self.list_canvas)
