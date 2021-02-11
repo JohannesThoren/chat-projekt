@@ -51,7 +51,9 @@ class Client:
                         self.app.user_list.insert(0, *usrList)
 
                     if p.type == "msg":
+                        self.app.chat_box.configure(state="normal")
                         self.app.chat_box.insert(tk.END, p.msg+"\n")
+                        self.app.chat_box.configure(state="disabled")
                 else:
                     continue
             except:
@@ -106,13 +108,15 @@ class app(tk.Frame):
         self.ip_entry = tk.Entry(self.ip, text="server ip address")
         self.port_entry = tk.Entry(self.port, text="server port")
         self.nick_entry = tk.Entry(self.nick, text="nickname")
-        self.ip_lbl = tk.Label(self.ip, text="Ip address")
+
+        self.ip_lbl = tk.Label(self.ip, text="Ip address",)
         self.port_lbl = tk.Label(self.port, text="server port")
         self.nick_lbl = tk.Label(self.nick, text="nickname")
 
         self.connect_btn = tk.Button(self.connection_canvas, text="Connect")
         self.disconnect_btn = tk.Button(self.connection_canvas, text="disconnect")
-        self.status_lbl = tk.Label(self.connection_canvas, text="not connected!")
+
+        self.status_lbl = tk.Label(self.connection_canvas, text="not connected!",font=44)
 
         self.ip_lbl.pack(fill=tk.X, side="left")
         self.port_lbl.pack(fill=tk.X, side="left")
@@ -130,8 +134,8 @@ class app(tk.Frame):
         self.user_list.pack(fill=tk.BOTH, expand=1)
 
         # chat area
-        self.chat_box = tk.Text(self.chat_canvas)
-        self.chat_input = tk.Entry(self.chat_canvas)
+        self.chat_box = tk.Text(self.chat_canvas, font=24, state="disabled")
+        self.chat_input = tk.Entry(self.chat_canvas, font=24)
         self.send_btn = tk.Button(self.chat_canvas, text="send")
 
         self.chat_box.pack(fill=tk.BOTH, expand=1)
@@ -141,8 +145,7 @@ class app(tk.Frame):
 
 def connect(app, client):
     try:
-        client.connect(app.ip_entry.get(), app.port_entry.get(),
-                       app.nick_entry.get())
+        client.connect(app.ip_entry.get(), app.port_entry.get(), app.nick_entry.get())
         app.chat_box.delete("1.0", "end")
         app.user_list.delete(0, tk.END)
         app.status_lbl.config(text=f"connected to {app.ip_entry.get()}")
