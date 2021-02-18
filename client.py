@@ -1,4 +1,4 @@
-#!/bin/python3
+# remove the line above if u are on windows
 
 import socket as sock
 import threading
@@ -54,6 +54,8 @@ class Client:
                         self.app.chat_box.configure(state="normal")
                         self.app.chat_box.insert(tk.END, p.msg+"\n")
                         self.app.chat_box.configure(state="disabled")
+
+                    
                 else:
                     continue
             except:
@@ -155,10 +157,11 @@ def connect(app, client):
 
 def disconnect(app, client):
     client.disconnect()
+    app.chat_box.configure(state="normal")
     app.chat_box.delete("1.0", "end")
     app.user_list.delete(0, tk.END)
     app.status_lbl.config(text="not connected")
-
+    app.chat_box.configure(state="disabled")
 
 root = tk.Tk()
 app = app(root)

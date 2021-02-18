@@ -1,4 +1,3 @@
-#!/bin/python3
 
 import socket
 import threading
@@ -51,7 +50,31 @@ class Server():
             # this will be auto sent from the client when it tries to connect
             nick = client.conn.recv(512).decode().rstrip()
 
-            client.set_nick(nick)
+            # check if somone has the name a user is trying to use
+            # if so put a number after it symbolizing how many users use this specific name
+     
+
+            tmp = 0
+            restart = True
+            while restart:
+                print("1")
+                restart = False
+                if len(self.clients) < 1:
+                    client.set_nick(nick)
+                    restart = False
+                    break
+                else:
+                    for c in self.clients:
+                        print("2")
+                        if nick == c.nick:
+                            print("3")
+                            tmp += 1
+                            nick = nick+str(tmp)
+                        else:
+                            restart = True
+                            client.set_nick(nick)
+                            conn.send(protocol.Protocol().build_msg(f"Your nickname was taken, we changed it to {client.nick}!", "msg", "server", "client").encode())
+
 
             print(f"[{client.addr}]\tnick name set to {client.nick}!")
 
@@ -67,7 +90,7 @@ class Server():
                 continue
             
             p = protocol.Protocol()
-            conn.send(protocol.Protocol().build_msg("you are now connected to the server!", "msg", "server", "client").encode())
+            conn.send(protocol.Protocol().build_msg(f"Welcome {client.nick}! You are now connected to the server!", "msg", "server", "client").encode())
 
             # start a thread for receiving data from the clients
             recv_thread = threading.Thread(
