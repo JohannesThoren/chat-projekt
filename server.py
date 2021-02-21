@@ -6,7 +6,7 @@ import protocol
 import datetime
 
 
-PORT = 3000
+PORT = int(input("Port Number : "))
 
 HOST = "0.0.0.0"
 
@@ -37,74 +37,79 @@ class Server():
         self.sock.bind((HOST, PORT))
 
         while True:
-        #try:
-            print(f"===[now listening for connections on port {PORT}!]===")
-
-            # listen for connections and connect them if the server is not full
-            self.sock.listen()
-            conn, addr = self.sock.accept()
-            print(f"[{addr}]\tjust connected to the server!")
-            client = Client(conn, addr)
-
-            # set the clients nick name
-            # this will be auto sent from the client when it tries to connect
-            nick = client.conn.recv(512).decode().rstrip()
-
-            # check if somone has the name a user is trying to use
-            # if so put a number after it symbolizing how many users use this specific name
-     
-
-            tmp = 0
-            restart = True
-            while restart:
-                print("1")
-                restart = False
-                if len(self.clients) < 1:
-                    client.set_nick(nick)
-                    restart = False
-                    break
-                else:
-                    for c in self.clients:
-                        print("2")
-                        if nick == c.nick:
-                            print("3")
-                            tmp += 1
-                            nick = nick+str(tmp)
-                        else:
-                            restart = True
-                            client.set_nick(nick)
-                            conn.send(protocol.Protocol().build_msg(f"Your nickname was taken, we changed it to {client.nick}!", "msg", "server", "client").encode())
-
-
-            print(f"[{client.addr}]\tnick name set to {client.nick}!")
-
-            # append the client to the clients list
-            self.clients.append(client)
-            print(f"[{client.addr}]\tclient added to clients list!")
-
-            # update connected list
             try:
-                self.update_name_list()
-                sleep(0.05)
+                print(f"===[now listening for connections on port {PORT}!]===")
+
+                # listen for connections and connect them if the server is not full
+                self.sock.listen()
+                conn, addr = self.sock.accept()
+                print(f"[{addr}]\tjust connected to the server!")
+                client = Client(conn, addr)
+
+                # set the clients nick name
+                # this will be auto sent from the client when it tries to connect
+                nick = client.conn.recv(512).decode().rstrip()
+
+                # TODO document this later (line 53 - line 102)
+                if len(self.clients) > 0:
+                    for c in self.clients:
+                        if nick == c.nick:
+                            print(f"{nick}\t{c.nick}")
+                            client.conn.send(protocol.Protocol().build_msg(
+                                "Nickname was taken, Reconnect with a new one!", "msg", "server", "client").encode())
+                            client.conn.close()
+                        else:
+                            print(
+                                f"[{client.addr}]\tnick name set to {client.nick}!")
+                            client.set_nick(nick)
+
+                            # append the client to the clients list
+                            print(f"[{client.addr}]\tclient added to clients list!")
+                            self.clients.append(client)
+
+                            try:
+                                self.update_name_list()
+                                sleep(0.05)
+                            except:
+                                continue
+
+                            p = protocol.Protocol()
+                            conn.send(protocol.Protocol().build_msg(
+                                f"Welcome {client.nick}! You are now connected to the server!", "msg", "server", "client").encode())
+
+                            # start a thread for receiving data from the clients
+                            recv_thread = threading.Thread(target=self.recv_func, args=(client,)).start()
+                            break
+
+                else:
+                    print(f"[{client.addr}]\tnick name set to {client.nick}!")
+                    client.set_nick(nick)
+
+                    # append the client to the clients list
+                    print(f"[{client.addr}]\tclient added to clients list!")
+                    self.clients.append(client)
+
+                    try:
+                        self.update_name_list()
+                        sleep(0.05)
+                    except:
+                        continue
+
+                    p = protocol.Protocol()
+                    conn.send(protocol.Protocol().build_msg(
+                        f"Welcome {client.nick}! You are now connected to the server!", "msg", "server", "client").encode())
+
+                    # start a thread for receiving data from the clients
+                    recv_thread = threading.Thread( target=self.recv_func, args=(client,)).start()
+
             except:
-                continue
-            
-            p = protocol.Protocol()
-            conn.send(protocol.Protocol().build_msg(f"Welcome {client.nick}! You are now connected to the server!", "msg", "server", "client").encode())
+                for client in self.clients:
+                    self.user_disconnect(client)
+                self.sock.close()
+                print("an error occurred!")
 
-            # start a thread for receiving data from the clients
-            recv_thread = threading.Thread(
-                target=self.recv_func, args=(client,)).start()
-
-        #except:
-            # if error clos all connections and exit
-            # for client in self.clients:
-            #     self.user_disconnect(client)
-            # self.sock.close()
-            # print("an error occurred!")
-
-            # exit()
-            # break
+                exit()
+                break
 
     # this is the function that will recv data from all connected clients.
     # this will be started in different threads.

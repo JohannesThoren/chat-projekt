@@ -136,7 +136,7 @@ class app(tk.Frame):
         self.user_list.pack(fill=tk.BOTH, expand=1)
 
         # chat area
-        self.chat_box = tk.Text(self.chat_canvas, font=24, state="disabled")
+        self.chat_box = tk.Text(self.chat_canvas, font=24)
         self.chat_input = tk.Entry(self.chat_canvas, font=24)
         self.send_btn = tk.Button(self.chat_canvas, text="send")
 
